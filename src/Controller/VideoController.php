@@ -8,6 +8,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints\Email;
+
+use Knp\Component\Pager\PaginatorInterface;
+
 use App\Entity\User;
 use App\Entity\Video;
 use App\Services\JwtAuth;
@@ -93,6 +96,48 @@ class VideoController extends AbstractController
                 }
             }
         }
+        
+        return $this->resjson($data);
+    }
+    
+    public function getAll(Request $request, JwtAuth $jwt_auth, PaginatorInterface $paginator) {
+        $token = $request->headers->get('Authorization');
+        
+        $authCheck = $jwt_auth->checkToken($token);
+        
+        if($authCheck) {
+            $identity = $jwt_auth->checkToken($token, true);
+            
+            $entity_manager = $this->getDoctrine()->getManager();
+            
+            $dql = "SELECT v FROM App\Entity\Video v WHERE v.user = {$identity->sub} ORDER BY v.id DESC";
+            $query = $entity_manager->createQuery($dql);
+            
+            $page = $request->query->get('page', 1);
+            $items_per_page = 5;
+            
+            $pagination = $paginator->paginate($query, $page, $items_per_page);
+            $total = $pagination->getTotalItemCount();
+            
+            $data = [
+                'status' => 'success',
+                'code' => 200,
+                'totalItemsCount' => $total,
+                'currentPage' => $page,
+                'itemsPerPage' => $items_per_page,
+                'totalPages' => ceil($total / $items_per_page),
+                'videos' => $pagination,
+                'userId' => $identity->sub
+            ]; 
+        } else {
+            $data = [
+                'status' => 'error',
+                'code' => 404,
+                'message' => 'No se pueden listar los videos en este momento'
+            ]; 
+        }
+        
+        
         
         return $this->resjson($data);
     }
