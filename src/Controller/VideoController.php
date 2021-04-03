@@ -136,9 +136,37 @@ class VideoController extends AbstractController
                 'message' => 'No se pueden listar los videos en este momento'
             ]; 
         }
+
+        return $this->resjson($data);
+    }
+    
+    public function getById(Request $request, JwtAuth $jwt_auth, $id = null) {
+        $token = $request->headers->get('Authorization');
         
+        $authCheck = $jwt_auth->checkToken($token);
         
+        $data = [
+            'status' => 'error',
+            'code' => 404,
+            'message' => 'Video no encontrado'
+        ]; 
         
+        if($authCheck) {
+            $identity = $jwt_auth->checkToken($token, true);
+            
+            $video = $this->getDoctrine()->getRepository(Video::class)->findOneBy([
+                'id' => $id
+            ]);
+            
+            if($video && is_object($video) && $identity->sub == $video->getUser()->getId()) {
+                $data = [
+                    'status' => 'success',
+                    'code' => 200,
+                    'data' => $video
+                ]; 
+            }
+        }
+
         return $this->resjson($data);
     }
 }
