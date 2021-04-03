@@ -169,4 +169,40 @@ class VideoController extends AbstractController
 
         return $this->resjson($data);
     }
+    
+    public function deleteById(Request $request, JwtAuth $jwt_auth, $id = null) {
+        $token = $request->headers->get('Authorization');
+        
+        $authCheck = $jwt_auth->checkToken($token);
+        
+        $data = [
+            'status' => 'error',
+            'code' => 404,
+            'message' => 'Video no encontrado'
+        ]; 
+        
+        if($authCheck) {
+            $identity = $jwt_auth->checkToken($token, true);
+            
+            $doctrine = $this->getDoctrine();
+            $em = $doctrine->getManager();
+            
+            $video = $doctrine->getRepository(Video::class)->findOneBy([
+                'id' => $id
+            ]);
+            
+            if($video && is_object($video) && $identity->sub == $video->getUser()->getId()) {
+                $em->remove($video);
+                $em->flush();
+                
+                $data = [
+                    'status' => 'success',
+                    'code' => 200,
+                    'data' => $video
+                ]; 
+            }
+        }
+        
+        return $this->resjson($data);
+    }
 }

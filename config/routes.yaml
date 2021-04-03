@@ -41,3 +41,8 @@ video_detail:
     path: /video/detail/{id}
     controller: App\Controller\VideoController::getById
     methods: [GET]
+    
+video_delete:
+    path: /video/delete/{id}
+    controller: App\Controller\VideoController::deleteById
+    methods: [DELETE]
