@@ -140,7 +140,7 @@ class UserController extends AbstractController
         if ($json != null) {
             $email = (!empty($params->email)) ? $params->email : null;
             $password = (!empty($params->password)) ? $params->password : null;
-            $get_token = (!empty($params->get_token)) ? $params->get_token : null;
+            $get_token = (!empty($params->gettoken)) ? $params->gettoken : null;
             
             $validator = Validation::createValidator();
             
